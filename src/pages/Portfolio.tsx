@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, useScroll, AnimatePresence, useInView, useTransform } from 'motion/react';
-import { Github, Linkedin, Mail, ArrowRight, Code, Globe, Zap, Layers, Moon, Sun, Award, ExternalLink, Briefcase, MonitorSmartphone, Server, PenTool, GraduationCap, Lock, FileText, Terminal, Coffee, Users, Star, ArrowUpRight, Send, Instagram, Copy, Check, Download } from 'lucide-react';
+import { Github, Linkedin, Mail, ArrowRight, Code, Globe, Zap, Layers, Moon, Sun, Award, ExternalLink, Briefcase, MonitorSmartphone, Server, PenTool, GraduationCap, Lock, FileText, Terminal, Coffee, Users, Star, ArrowUpRight, Send, Instagram, Copy, Check, Download, Cpu, Braces } from 'lucide-react';
 import { db, isFirebaseConfigured } from '../lib/firebase';
 import { collection, onSnapshot, doc, setDoc, increment, addDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
@@ -419,7 +419,7 @@ const Hero = ({ settings }: { settings: any }) => {
   }, []);
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText(settings?.email || 'sanjarbekotabekov010@gmail.com');
+    navigator.clipboard.writeText(settings?.email || 'hello@example.com');
     setCopied(true);
     toast.success("Email nusxalandi!");
     setTimeout(() => setCopied(false), 2000);
@@ -516,6 +516,24 @@ const Hero = ({ settings }: { settings: any }) => {
             className="flex-shrink-0 relative w-64 h-64 md:w-80 md:h-80 lg:w-96 lg:h-96 mt-12 lg:mt-0"
           >
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/30 to-purple-500/30 rounded-full blur-[60px] animate-pulse"></div>
+            
+            {/* Floating Programming Icons */}
+            <motion.div 
+              animate={{ y: [0, -20, 0], rotate: [0, 15, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -top-4 -left-4 z-20 bg-white/20 dark:bg-white/10 backdrop-blur-2xl p-5 rounded-3xl border border-white/30 shadow-2xl"
+            >
+              <Code className="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" size={40} />
+            </motion.div>
+
+            <motion.div 
+              animate={{ y: [0, 20, 0], rotate: [0, -15, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              className="absolute -bottom-4 -right-4 z-20 bg-white/20 dark:bg-white/10 backdrop-blur-2xl p-5 rounded-3xl border border-white/30 shadow-2xl"
+            >
+              <Terminal className="text-[#FF4E00] drop-shadow-[0_0_8px_rgba(255,78,0,0.5)]" size={40} />
+            </motion.div>
+
             <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white/20 dark:border-white/10 shadow-2xl">
                 <img 
                 src={heroImage || "https://picsum.photos/seed/sanjarbek/800/800"} 
@@ -646,7 +664,7 @@ const BentoGrid = ({ settings }: { settings: any }) => {
                 <Layers className="text-[#1d1d1f] dark:text-white mb-8" size={40} strokeWidth={1.5} />
                 <h3 className="text-3xl md:text-4xl font-bold text-[#1d1d1f] dark:text-white mb-6 tracking-tight">Sodda. Kreativ. Samarali.</h3>
                 <p className="text-[#86868b] dark:text-gray-400 leading-relaxed text-lg md:text-xl font-light">
-                 Men — Sanjarbek, web texnologiyalar sohasida rivojlanayotgan developer. Asosiy e’tiborim JavaScript, React va Python orqali samarali va kengaytiriladigan yechimlar yaratishga qaratilgan. React yordamida foydalanuvchi uchun qulay va dinamik interfeyslar ishlab chiqaman. Hozirda Python va kiberxavfsizlik asoslarini o‘rganayapman.
+                  Dasturlash men uchun shunchaki kod yozish emas, balki insonlar hayotini yengillashtiruvchi vositalar yaratishdir. Har bir loyihada minimalizm va yuqori unumdorlikni birinchi o'ringa qo'yaman.
                 </p>
               </div>
             </motion.div>
@@ -688,7 +706,7 @@ const BentoGrid = ({ settings }: { settings: any }) => {
                   <Zap size={20} />
                 </div>
                 <div>
-                  <p className="text-6xl font-display font-bold tracking-tighter mb-2">1+</p>
+                  <p className="text-6xl font-display font-bold tracking-tighter mb-2">3+</p>
                   <p className="opacity-80 font-medium tracking-widest uppercase text-sm">Yillik tajriba</p>
                 </div>
               </div>
@@ -1227,8 +1245,8 @@ const Contact = ({ settings }: { settings: any }) => {
           </p>
           
           <div className="flex flex-col gap-6">
-            <a href={`mailto:${settings?.email || 'sanjarbekotabekov010@gmail.com'}`} className="text-2xl md:text-4xl font-light transition-colors w-max">
-              {settings?.email || 'sanjarbekotabekov010@gmail.com'}
+            <a href={`mailto:${settings?.email || 'hello@example.com'}`} className="text-2xl md:text-4xl font-light transition-colors w-max">
+              {settings?.email || 'hello@example.com'}
             </a>
             <div className="flex gap-4 mt-4">
               {settings?.github && (
