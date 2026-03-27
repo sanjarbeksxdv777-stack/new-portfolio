@@ -560,14 +560,31 @@ const Hero = ({ settings }: { settings: any }) => {
               <Terminal className="text-[#FF4E00] drop-shadow-[0_0_8px_rgba(255,78,0,0.5)]" size={32} />
             </motion.div>
 
-            <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white/20 dark:border-white/10 shadow-2xl">
+            <motion.div 
+              onMouseMove={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - (rect.left + rect.width / 2);
+                const y = e.clientY - (rect.top + rect.height / 2);
+                e.currentTarget.style.setProperty('--rotate-x', `${-y / 10}deg`);
+                e.currentTarget.style.setProperty('--rotate-y', `${x / 10}deg`);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.setProperty('--rotate-x', '0deg');
+                e.currentTarget.style.setProperty('--rotate-y', '0deg');
+              }}
+              style={{ 
+                transform: 'perspective(1000px) rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg))',
+                transition: 'transform 0.1s ease-out'
+              } as any}
+              className="relative w-full h-full rounded-full overflow-hidden border-4 border-white/20 dark:border-white/10 shadow-2xl transform-gpu"
+            >
                 <img 
                 src={heroImage || "https://picsum.photos/seed/sanjarbek/800/800"} 
                 alt="Sanjarbek Otabekov" 
-                className="w-full h-full object-cover transition-transform duration-700"
+                className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                 referrerPolicy="no-referrer"
                 />
-            </div>
+            </motion.div>
           </motion.div>
         </div>
       </div>
@@ -658,9 +675,10 @@ const ScrollToTop = () => {
   );
 };
 
-const BentoCard = ({ children, className, delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => {
+const BentoCard = ({ children, className, delay = 0, title, fullContent }: { children: React.ReactNode, className?: string, delay?: number, title?: string, fullContent?: React.ReactNode }) => {
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   function handleMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
     const { left, top } = currentTarget.getBoundingClientRect();
@@ -669,27 +687,64 @@ const BentoCard = ({ children, className, delay = 0 }: { children: React.ReactNo
   }
 
   return (
-    <StaggerItem className={className}>
-      <motion.div 
-        onMouseMove={handleMouseMove}
-        whileHover={{ y: -5, scale: 1.01 }}
-        className="h-full bg-white/40 dark:bg-white/5 backdrop-blur-2xl rounded-[2.5rem] p-8 flex flex-col justify-between group transition-all duration-500 border border-white/20 dark:border-white/10 relative overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] hover:shadow-[0_8px_32px_0_rgba(59,130,246,0.15)] hover:border-blue-500/30"
-      >
-        <motion.div
-          className="pointer-events-none absolute -inset-px rounded-[2.5rem] opacity-0 transition duration-300 group-hover:opacity-100"
-          style={{
-            background: useMotionTemplate`
-              radial-gradient(
-                650px circle at ${mouseX}px ${mouseY}px,
-                rgba(59, 130, 246, 0.1),
-                transparent 80%
-              )
-            `,
-          }}
-        />
-        {children}
-      </motion.div>
-    </StaggerItem>
+    <>
+      <StaggerItem className={className}>
+        <motion.div 
+          layoutId={`card-${title}`}
+          onClick={() => fullContent && setIsExpanded(true)}
+          onMouseMove={handleMouseMove}
+          whileHover={{ y: -5, scale: 1.01 }}
+          className={`h-full bg-white/40 dark:bg-white/5 backdrop-blur-2xl rounded-[2.5rem] p-8 flex flex-col justify-between group transition-all duration-500 border border-white/20 dark:border-white/10 relative overflow-hidden shadow-[0_8px_32px_0_rgba(0,0,0,0.05)] hover:shadow-[0_8px_32px_0_rgba(59,130,246,0.15)] hover:border-blue-500/30 ${fullContent ? 'cursor-pointer' : ''}`}
+        >
+          <motion.div
+            className="pointer-events-none absolute -inset-px rounded-[2.5rem] opacity-0 transition duration-300 group-hover:opacity-100"
+            style={{
+              background: useMotionTemplate`
+                radial-gradient(
+                  650px circle at ${mouseX}px ${mouseY}px,
+                  rgba(59, 130, 246, 0.1),
+                  transparent 80%
+                )
+              `,
+            }}
+          />
+          {children}
+          {fullContent && (
+            <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <ArrowUpRight size={16} />
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </StaggerItem>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsExpanded(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div 
+              layoutId={`card-${title}`}
+              className="relative w-full max-w-2xl bg-white dark:bg-[#111] rounded-[3rem] p-10 shadow-2xl border border-white/10 overflow-hidden"
+            >
+              <button 
+                onClick={() => setIsExpanded(false)}
+                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+              >
+                <Lock size={18} className="rotate-45" />
+              </button>
+              {fullContent}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
@@ -713,7 +768,21 @@ const BentoGrid = ({ settings }: { settings: any }) => {
         </div>
 
         <StaggerContainer className="grid grid-cols-1 md:grid-cols-4 gap-4 auto-rows-[280px]">
-          <BentoCard className="md:col-span-2 md:row-span-2">
+          <BentoCard 
+            className="md:col-span-2 md:row-span-2" 
+            title="Sodda. Kreativ. Samarali."
+            fullContent={
+              <div className="space-y-6">
+                <Layers className="text-blue-500 mb-4" size={48} />
+                <h3 className="text-4xl font-bold dark:text-white">Sodda. Kreativ. Samarali.</h3>
+                <p className="text-xl text-gray-500 dark:text-gray-400 leading-relaxed">
+                  Dasturlash men uchun shunchaki kod yozish emas, balki insonlar hayotini yengillashtiruvchi vositalar yaratishdir. Har bir loyihada minimalizm va yuqori unumdorlikni birinchi o'ringa qo'yaman. 
+                  <br /><br />
+                  Mening maqsadim - foydalanuvchi interfeyslarini shunchalik sodda qilishki, hatto birinchi marta kirgan odam ham o'zini uydagidek his qilsin. Murakkab muammolarga kreativ yechimlar topish mening asosiy kuchimdir.
+                </p>
+              </div>
+            }
+          >
                <div className="absolute top-0 right-0 p-10 opacity-5 transition-transform duration-500 text-[#1d1d1f] dark:text-white group-hover:scale-110 group-hover:rotate-3">
                 <Layers size={200} />
               </div>
@@ -721,12 +790,12 @@ const BentoGrid = ({ settings }: { settings: any }) => {
                 <Layers className="text-[#1d1d1f] dark:text-white mb-8" size={40} strokeWidth={1.5} />
                 <h3 className="text-3xl md:text-4xl font-bold text-[#1d1d1f] dark:text-white mb-6 tracking-tight">Sodda. Kreativ. Samarali.</h3>
                 <p className="text-[#86868b] dark:text-gray-400 leading-relaxed text-lg md:text-xl font-light">
-                  Dasturlash men uchun shunchaki kod yozish emas, balki insonlar hayotini yengillashtiruvchi vositalar yaratishdir. Har bir loyihada minimalizm va yuqori unumdorlikni birinchi o'ringa qo'yaman.
+                  Dasturlash men uchun shunchaki kod yozish emas, balki insonlar hayotini yengillashtiruvchi vositalar yaratishdir.
                 </p>
               </div>
           </BentoCard>
 
-          <BentoCard className="md:col-span-1 md:row-span-1">
+          <BentoCard className="md:col-span-1 md:row-span-1" title="Joylashuv">
               <div className="absolute top-0 right-0 p-6 opacity-5 transition-transform duration-500 text-[#1d1d1f] dark:text-white group-hover:scale-110 group-hover:-rotate-12">
                 <Globe size={120} />
               </div>
@@ -764,7 +833,7 @@ const BentoGrid = ({ settings }: { settings: any }) => {
             </motion.div>
           </StaggerItem>
 
-          <BentoCard className="md:col-span-1 md:row-span-1">
+          <BentoCard className="md:col-span-1 md:row-span-1" title="Rezyume">
                <div className="w-12 h-12 rounded-full border border-black/10 dark:border-white/10 flex items-center justify-center text-[#1d1d1f] dark:text-white mb-4 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors">
                   <FileText size={20} />
                 </div>
@@ -780,7 +849,24 @@ const BentoGrid = ({ settings }: { settings: any }) => {
                 </div>
           </BentoCard>
 
-          <BentoCard className="md:col-span-1 md:row-span-1">
+          <BentoCard 
+            className="md:col-span-1 md:row-span-1" 
+            title="Stack"
+            fullContent={
+              <div className="space-y-6">
+                <Terminal className="text-green-500 mb-4" size={48} />
+                <h3 className="text-4xl font-bold dark:text-white">Texnologiyalar</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {['React', 'Next.js', 'TypeScript', 'Node.js', 'Tailwind CSS', 'Firebase', 'MongoDB', 'Express'].map(tech => (
+                    <div key={tech} className="bg-black/5 dark:bg-white/5 p-4 rounded-2xl flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="font-medium dark:text-white">{tech}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            }
+          >
               <div className="w-12 h-12 rounded-full border border-black/10 dark:border-white/10 flex items-center justify-center text-[#1d1d1f] dark:text-white mb-4 group-hover:bg-black/5 dark:group-hover:bg-white/5 transition-colors">
                 <Terminal size={20} />
               </div>
@@ -996,12 +1082,7 @@ const ProjectsSection = ({ settings }: { settings: any }) => {
   const { t, lang } = useLanguage();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const targetRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: targetRef,
-  });
-
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-75%"]);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (isFirebaseConfigured && db) {
@@ -1016,39 +1097,68 @@ const ProjectsSection = ({ settings }: { settings: any }) => {
     }
   }, []);
 
-  return (
-    <section id="projects" ref={targetRef} className="relative h-[400vh]">
-      <div className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden">
-        <div className="max-w-7xl mx-auto w-full px-6 md:px-12 mb-12">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-            <div>
-              <TextReveal>
-                <h2 className="text-5xl md:text-7xl font-display font-bold tracking-tighter text-[#1d1d1f] dark:text-white uppercase mb-4">
-                  <Typewriter text={t.projects.title} />
-                </h2>
-              </TextReveal>
-              <p className="text-xl text-[#86868b] dark:text-gray-400 max-w-2xl font-light">{t.projects.subtitle}</p>
-            </div>
-            <a href={settings?.github || "https://github.com"} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-[#1d1d1f] dark:text-white transition-opacity">
-              {lang === 'UZ' ? "Barcha loyihalar" : lang === 'RU' ? "Все проекты" : "All projects"} <ArrowUpRight size={18} />
-            </a>
-          </div>
-        </div>
+  // Double the projects for infinite marquee effect
+  const displayProjects = [...projects, ...projects];
 
-        {loading ? (
-          <div className="text-center text-gray-500 py-20">{lang === 'UZ' ? "Yuklanmoqda..." : lang === 'RU' ? "Загрузка..." : "Loading..."}</div>
-        ) : projects.length === 0 ? (
-          <div className="text-center text-gray-500 py-20 border border-dashed border-gray-300 dark:border-gray-800 rounded-3xl mx-12">
-            {t.projects.noProjects}
+  return (
+    <section id="projects" className="py-32 overflow-hidden relative bg-dot-pattern">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 mb-20 relative z-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div>
+            <TextReveal>
+              <h2 className="text-5xl md:text-7xl font-display font-bold tracking-tighter text-[#1d1d1f] dark:text-white uppercase mb-4">
+                <Typewriter text={t.projects.title} />
+              </h2>
+            </TextReveal>
+            <p className="text-xl text-[#86868b] dark:text-gray-400 max-w-2xl font-light">{t.projects.subtitle}</p>
           </div>
-        ) : (
-          <motion.div style={{ x }} className="flex gap-12 px-12">
-            {projects.map((project, index) => (
-              <div key={project.id} className="flex-shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw]">
-                <div className="bg-white/40 dark:bg-white/5 backdrop-blur-2xl rounded-[3rem] p-8 md:p-12 border border-white/20 dark:border-white/10 shadow-2xl group h-full flex flex-col">
-                  <div className="relative rounded-[2rem] overflow-hidden aspect-video mb-8">
+          <a href={settings?.github || "https://github.com"} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-[#1d1d1f] dark:text-white transition-opacity">
+            {lang === 'UZ' ? "Barcha loyihalar" : lang === 'RU' ? "Все проекты" : "All projects"} <ArrowUpRight size={18} />
+          </a>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="text-center text-gray-500 py-20">{lang === 'UZ' ? "Yuklanmoqda..." : lang === 'RU' ? "Загрузка..." : "Loading..."}</div>
+      ) : projects.length === 0 ? (
+        <div className="text-center text-gray-500 py-20 border border-dashed border-gray-300 dark:border-gray-800 rounded-3xl mx-12">
+          {t.projects.noProjects}
+        </div>
+      ) : (
+        <div className="relative perspective-2000">
+          <motion.div 
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            animate={{ x: isPaused ? undefined : ["0%", "-50%"] }}
+            transition={{ 
+              duration: 40, 
+              repeat: Infinity, 
+              ease: "linear",
+              repeatType: "loop"
+            }}
+            className="flex gap-12 px-12 w-max"
+          >
+            {displayProjects.map((project, index) => (
+              <div key={`${project.id}-${index}`} className="flex-shrink-0 w-[85vw] md:w-[60vw] lg:w-[40vw] py-12">
+                <motion.div 
+                  whileHover={{ 
+                    rotateY: 15,
+                    rotateX: 10,
+                    scale: 1.05,
+                    z: 100,
+                    boxShadow: "0 50px 100px -20px rgba(0,0,0,0.5)"
+                  }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20 }}
+                  className="bg-white/40 dark:bg-white/5 backdrop-blur-2xl rounded-[3rem] p-8 md:p-12 border border-white/20 dark:border-white/10 shadow-2xl group h-full flex flex-col transform-gpu preserve-3d relative"
+                >
+                  {/* 3D Floating Tag */}
+                  <div className="absolute -top-4 -right-4 bg-[#FF4E00] text-white px-6 py-2 rounded-full font-bold text-xs shadow-xl transform translate-z-20">
+                    {project.tag}
+                  </div>
+
+                  <div className="relative rounded-[2rem] overflow-hidden aspect-video mb-8 shadow-2xl transform translate-z-10">
                     <motion.img 
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.8 }}
                       src={project.image} 
                       alt={project.title} 
@@ -1058,39 +1168,40 @@ const ProjectsSection = ({ settings }: { settings: any }) => {
                     <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
                   </div>
                   
-                  <div className="flex-1 flex flex-col">
+                  <div className="flex-1 flex flex-col transform translate-z-5">
                     <div className="flex items-center gap-4 mb-4">
-                      <span className="text-xs font-bold tracking-widest uppercase text-[#FF4E00]">
-                        {project.tag}
-                      </span>
-                      <div className="h-px w-8 bg-black/20 dark:bg-white/20"></div>
+                      <div className="h-px w-8 bg-[#FF4E00]"></div>
                       <span className="text-xs font-bold tracking-widest uppercase text-[#86868b] dark:text-gray-500">
-                        {String(index + 1).padStart(2, '0')}
+                        {String((index % projects.length) + 1).padStart(2, '0')}
                       </span>
                     </div>
                     
                     <h3 className="text-3xl md:text-4xl font-display font-bold text-[#1d1d1f] dark:text-white mb-4 tracking-tight">{project.title}</h3>
-                    <p className="text-lg text-[#86868b] dark:text-gray-400 mb-8 leading-relaxed font-light line-clamp-3">{project.desc}</p>
+                    <p className="text-lg text-[#86868b] dark:text-gray-400 mb-8 leading-relaxed font-light line-clamp-2">{project.desc}</p>
                     
                     <div className="mt-auto flex flex-wrap items-center gap-4">
                       {project.link && (
-                        <a href={project.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white bg-[#FF4E00] px-6 py-3 rounded-full transition-all shadow-lg hover:shadow-orange-500/40">
+                        <a href={project.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white bg-[#FF4E00] px-6 py-3 rounded-full transition-all shadow-lg hover:shadow-orange-500/40 hover:-translate-y-1">
                           {t.projects.viewProject} <ArrowUpRight size={14} />
                         </a>
                       )}
                       {project.githubUrl && (
-                        <a href={project.githubUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#1d1d1f] dark:text-white border border-black/10 dark:border-white/20 px-6 py-3 rounded-full transition-all hover:bg-black/5 dark:hover:bg-white/5">
+                        <a href={project.githubUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#1d1d1f] dark:text-white border border-black/10 dark:border-white/20 px-6 py-3 rounded-full transition-all hover:bg-black/5 dark:hover:bg-white/5 hover:-translate-y-1">
                           <Github size={14} /> {lang === 'UZ' ? "Kod" : lang === 'RU' ? "Код" : "Code"}
                         </a>
                       )}
                     </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
             ))}
           </motion.div>
-        )}
-      </div>
+          
+          {/* Gradient Overlays for smooth edges */}
+          <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white dark:from-[#0a0a0a] to-transparent z-20 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white dark:from-[#0a0a0a] to-transparent z-20 pointer-events-none" />
+        </div>
+      )}
     </section>
   );
 };
